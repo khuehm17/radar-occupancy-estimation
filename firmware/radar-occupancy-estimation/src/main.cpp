@@ -1,3 +1,7 @@
+
+/**************************************************************************************************
+ *                                          Include
+ **************************************************************************************************/
 #include <Arduino.h>
 
 #include <WiFi.h>
@@ -9,9 +13,9 @@
 
 #include <DFRobot_mmWave_Radar.h>
 
-/*****************************************************************************
- *                            MACRO DEFINITION
- *****************************************************************************/
+/**************************************************************************************************
+ *                                      Macro Definition
+ **************************************************************************************************/
 // #define WIFI_SSID "HCMUS-VLDT-SV"
 // #define WIFI_PASSWORD "svvldt38300595"
 #define WIFI_SSID           "DOM-COFFEE 2"
@@ -29,9 +33,9 @@
 #define NO_ONE_DETECTED     0
 #define PRESENCE_DETECTED   1
 
-/*****************************************************************************
- *                              GLOBAL DECLARATION
- *****************************************************************************/
+/**************************************************************************************************
+ *                                     Global declaration
+ **************************************************************************************************/
 void connectToWifi();
 void connectToMqtt();
 void WiFiEvent(WiFiEvent_t event);
@@ -41,7 +45,9 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
 void onMqttSubscribe(uint16_t packetId, uint8_t qos);
 void onMqttUnsubscribe(uint16_t packetId);
 void onMqttPublish(uint16_t packetId);
-void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
+void onMqttMessage(char *topic, char *payload, 
+                    AsyncMqttClientMessageProperties properties, 
+                    size_t len, size_t index, size_t total);
 void onMqttPublish(uint16_t packetId);
 
 /* RTOS tasks */
@@ -63,9 +69,9 @@ char ctrlMessageDataBuffer[50];
 /* Variable for mmWaveSensor */
 DFRobot_mmWave_Radar mmWaveSensor(&Serial2);
 
-/*****************************************************************************
- *                          MAIN APPLICATION
- *****************************************************************************/
+/**************************************************************************************************
+ *                                      Main application
+ **************************************************************************************************/
 void setup()
 {
     pinMode(BUILTIN_LED, OUTPUT);
@@ -82,13 +88,18 @@ void setup()
 
     /* Init Wifi connection */
     Serial.println("Initializing...");
-    wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
+    wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), 
+                                        pdFALSE, (void *)0, 
+                                        reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
     WiFi.onEvent(WiFiEvent);
     /* Start Wifi connection */
     connectToWifi();
    
     /* Init MQTT */
-    mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
+    mqttReconnectTimer = xTimerCreate("mqttTimer", 
+                                    pdMS_TO_TICKS(2000), pdFALSE, 
+                                    (void *)0, 
+                                    reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
     mqttClient.onConnect(onMqttConnect);
     mqttClient.onDisconnect(onMqttDisconnect);
     mqttClient.onSubscribe(onMqttSubscribe);
@@ -107,9 +118,9 @@ void loop()
     ;
 }
 
-/*****************************************************************************
- *	                        TASK FUNCTION
- *****************************************************************************/
+/**************************************************************************************************
+ *	                                    Task functions
+ **************************************************************************************************/
 void mqtt_sayHello(void *pvParameter)
 {
     int msgCount = 0;
@@ -164,9 +175,9 @@ void onControlMessage(char * ctrlMsg, uint16_t len)
     }
 }
 
-/*****************************************************************************
- *	                        SUB-FUNCTIONs
- *****************************************************************************/
+/**************************************************************************************************
+ *	                                    Sub-Functions
+ **************************************************************************************************/
 void connectToWifi()
 {
     Serial.println("Connecting to Wi-Fi...");
@@ -192,7 +203,8 @@ void WiFiEvent(WiFiEvent_t event)
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         Serial.println("WiFi lost connection");
-        xTimerStop(mqttReconnectTimer, 0); // ensure we don't reconnect to MQTT while reconnecting to Wi-Fi
+        /* ensure we don't reconnect to MQTT while reconnecting to Wi-Fi */
+        xTimerStop(mqttReconnectTimer, 0);
         xTimerStart(wifiReconnectTimer, 0);
         break;
     }
@@ -237,19 +249,20 @@ void onMqttUnsubscribe(uint16_t packetId)
     Serial.println(packetId);
 }
 
-void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
+void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, 
+                    size_t len, size_t index, size_t total)
 {
     Serial.println("Message received.");
     Serial.print("topic: ");
     Serial.print(topic);
+    Serial.print("\t len: ");
+    Serial.print(len);
     // Serial.print("\t qos: ");
     // Serial.print(properties.qos);
     // Serial.print("\t dup: ");
     // Serial.print(properties.dup);
     // Serial.print("\t retain: ");
     // Serial.print(properties.retain);
-    Serial.print("\t len: ");
-    Serial.print(len);
     // Serial.print("\t index: ");
     // Serial.print(index);
     // Serial.print("\t total: ");
